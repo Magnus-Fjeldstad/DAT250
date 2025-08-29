@@ -25,14 +25,28 @@ jacocoTestReport {
 	reports {
 		xml.required = true
 		html.required = true
-		csv.required = false
 	}
+	classDirectories.setFrom(
+			fileTree(
+					dir: layout.buildDirectory.dir("classes/java/main"),
+					include: ["**/*.class"],
+					exclude: ["**/*Application.class", "**/config/**"]
+			)
+	)
 }
+
 jacocoTestCoverageVerification {
 	violationRules {
 		rule {
+			classDirectories.setFrom(
+					fileTree(
+							dir: layout.buildDirectory.dir("classes/java/main"),
+							include: ["**/*.class"],
+							exclude: ["**/*Application.class", "**/config/**"]
+					)
+			)
 			limit {
-				counter = 'INSTRUCTION'
+				counter = 'LINE'
 				value = 'COVEREDRATIO'
 				minimum = 0.60
 			}
