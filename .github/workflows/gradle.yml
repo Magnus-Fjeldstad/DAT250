@@ -11,8 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      pull-requests: write   # trengs for PR-kommentar (coverage summary)
-
+      pull-requests: write   # for PR-kommentar
     steps:
       - uses: actions/checkout@v4
 
@@ -28,6 +27,7 @@ jobs:
       - name: Build, Test & Coverage
         run: ./gradlew clean build jacocoTestReport --stacktrace
 
+      # JUnit-annotasjoner i GitHub UI
       - name: Publish JUnit test results
         uses: mikepenz/action-junit-report@v4
         if: always()
@@ -35,6 +35,28 @@ jobs:
           report_paths: '**/build/test-results/test/TEST-*.xml'
           require_tests: true
 
+      # Lag coverage-oppsummering (leser JaCoCo XML)
+      - name: Generate coverage summary
+        uses: irongut/CodeCoverageSummary@v1.3.0
+        with:
+          filename: "**/build/reports/jacoco/test/jacocoTestReport.xml"
+          badge: true
+          fail_below_min: false
+          format: markdown
+          hide_branch_rate: false
+          hide_complexity: true
+          indicators: true
+          output: both
+          thresholds: '60 80'
+
+      # Vis coverage i Job Summary-panelet
+      - name: Add coverage to job summary
+        if: always()
+        run: |
+          echo "## Code coverage" >> $GITHUB_STEP_SUMMARY
+          cat code-coverage-results.md >> $GITHUB_STEP_SUMMARY
+
+      # PR-kommentar med coverage (kun på PR)
       - name: Jacoco coverage summary comment
         uses: madrapps/jacoco-report@v1.6.1
         if: github.event_name == 'pull_request'
@@ -46,6 +68,7 @@ jobs:
           min-coverage-overall: 0
           min-coverage-changed-files: 0
 
+      # Last opp pene HTML-rapporter
       - name: Upload test & coverage HTML reports
         uses: actions/upload-artifact@v4
         if: always()
