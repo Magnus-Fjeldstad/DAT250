@@ -1,7 +1,7 @@
 name: CI (Build, Test, JaCoCo)
 
 on:
-  push:        # alle branches
+  push:
   pull_request:
 
 jobs:
@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      pull-requests: write   # for PR-kommentar
+      pull-requests: write
 
     steps:
       - uses: actions/checkout@v4
@@ -26,7 +26,6 @@ jobs:
       - name: Build, Test & Coverage
         run: ./gradlew clean build jacocoTestReport --stacktrace
 
-      # JUnit-annotasjoner i GitHub UI
       - name: Publish JUnit test results
         uses: mikepenz/action-junit-report@v4
         if: always()
@@ -34,11 +33,10 @@ jobs:
           report_paths: '**/build/test-results/test/TEST-*.xml'
           require_tests: true
 
-      # Lag coverage-oppsummering (LESER JaCoCo XML)
       - name: Generate coverage summary
         uses: irongut/CodeCoverageSummary@v1.3.0
         with:
-          files: '**/build/reports/jacoco/test/jacocoTestReport.xml'  # <- riktig input
+          filename: build/reports/jacoco/test/jacocoTestReport.xml
           badge: true
           fail_below_min: false
           format: markdown
@@ -48,7 +46,6 @@ jobs:
           output: both
           thresholds: '60 80'
 
-      # Vis coverage i Job Summary-panelet (uten å feile hvis fil mangler)
       - name: Add coverage to job summary
         if: always()
         run: |
@@ -56,27 +53,25 @@ jobs:
           if [ -f code-coverage-results.md ]; then
             cat code-coverage-results.md >> "$GITHUB_STEP_SUMMARY"
           else
-            echo "_No coverage summary file found. Check JaCoCo path and that tests ran._" >> "$GITHUB_STEP_SUMMARY"
+            echo "_No coverage summary file found. Check that build/reports/jacoco/test/jacocoTestReport.xml exists._" >> "$GITHUB_STEP_SUMMARY"
           fi
 
-      # PR-kommentar med coverage (kun på PR)
       - name: Jacoco coverage summary comment
         uses: madrapps/jacoco-report@v1.6.1
         if: github.event_name == 'pull_request'
         with:
           paths: |
-            **/build/reports/jacoco/test/jacocoTestReport.xml
+            build/reports/jacoco/test/jacocoTestReport.xml
           token: ${{ secrets.GITHUB_TOKEN }}
           title: 'JaCoCo Coverage'
           min-coverage-overall: 0
           min-coverage-changed-files: 0
 
-      # Last opp pene HTML-rapporter
       - name: Upload test & coverage HTML reports
         uses: actions/upload-artifact@v4
         if: always()
         with:
           name: test-and-coverage-reports
           path: |
-            **/build/reports/tests/test
-            **/build/reports/jacoco/test/html
+            build/reports/tests/test
+            build/reports/jacoco/test/html
