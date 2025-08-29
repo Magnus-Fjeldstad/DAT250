@@ -28,6 +28,19 @@ jacocoTestReport {
 		csv.required = false
 	}
 }
+jacocoTestCoverageVerification {
+	violationRules {
+		rule {
+			limit {
+				counter = 'INSTRUCTION'
+				value = 'COVEREDRATIO'
+				minimum = 0.60
+			}
+		}
+	}
+}
+
+check.dependsOn jacocoTestCoverageVerification
 
 repositories { mavenCentral() }
 
