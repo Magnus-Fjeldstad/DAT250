@@ -1,29 +1,56 @@
 plugins {
 	id 'java'
-	id 'org.springframework.boot' version '3.5.5'
-	id 'io.spring.dependency-management' version '1.1.7'
+	id 'org.springframework.boot' version '3.3.2'
+	id 'io.spring.dependency-management' version '1.1.5'
+	id 'org.openapi.generator' version '7.6.0'
 }
 
 group = 'com.example'
 version = '0.0.1-SNAPSHOT'
-description = 'Demo project for DAT250'
 
 java {
 	toolchain {
-		languageVersion = JavaLanguageVersion.of(21)
+		languageVersion = JavaLanguageVersion.of(21) // eller 17
 	}
 }
 
-repositories {
-	mavenCentral()
-}
+repositories { mavenCentral() }
 
 dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-web'
+	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.6.0'
+
+	implementation 'org.openapitools:jackson-databind-nullable:0.2.6'
+
+	compileOnly 'org.projectlombok:lombok:1.18.32'
+	annotationProcessor 'org.projectlombok:lombok:1.18.32'
+	testCompileOnly 'org.projectlombok:lombok:1.18.32'
+	testAnnotationProcessor 'org.projectlombok:lombok:1.18.32'
+
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
-	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
-tasks.named('test') {
-	useJUnitPlatform()
+openApiGenerate {
+	generatorName = 'spring'
+	inputSpec = "$projectDir/src/main/resources/swagger/poll-api.yaml"
+	outputDir = layout.buildDirectory.dir("generated").get().asFile.path
+	apiPackage = 'com.example.demo.generated.api'
+	modelPackage = 'com.example.demo.generated.model'
+	invokerPackage = 'com.example.demo.generated.invoker'
+	configOptions = [
+			interfaceOnly    : 'true',
+			useSpringBoot3   : 'true',
+			dateLibrary      : 'java8',
+			useTags          : 'true',
+			useLombok        : 'true',
+			serializableModel: 'true'
+	]
 }
+
+sourceSets {
+	main {
+		java.srcDir("$buildDir/generated/src/main/java")
+	}
+}
+
+tasks.compileJava.dependsOn tasks.openApiGenerate

@@ -1,0 +1,219 @@
+openapi: 3.0.3
+info:
+  title: Poll API
+  version: 1.0.0
+servers:
+  - url: http://localhost:8080
+
+paths:
+  /users:
+    get:
+      tags: [Users]
+      operationId: listUsers
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+    post:
+      tags: [Users]
+      operationId: createUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserCreate'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+
+  /polls:
+    get:
+      tags: [Polls]
+      operationId: listPolls
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Poll'
+    post:
+      tags: [Polls]
+      operationId: createPoll
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PollCreate'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Poll'
+
+  /polls/{pollId}/votes:
+    post:
+      tags: [Votes]
+      operationId: createVote
+      parameters:
+        - in: path
+          name: pollId
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VoteCreate'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Vote'
+
+  /votes:
+    get:
+      tags: [Votes]
+      operationId: listVotes
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Vote'
+
+
+########################## Schemas ###############################
+components:
+  schemas:
+    Id:
+      type: integer
+      format: int64
+      minimum: 1
+
+    User:
+      type: object
+      required: [id, username, email]
+      properties:
+        id:
+          $ref: '#/components/schemas/Id'
+        username:
+          type: string
+          minLength: 1
+        email:
+          type: string
+          format: email
+
+    UserCreate:
+      type: object
+      required: [username, email]
+      properties:
+        username:
+          type: string
+        email:
+          type: string
+          format: email
+
+    VoteOption:
+      type: object
+      required: [id, pollId, caption, presentationOrder]
+      properties:
+        id:
+          $ref: '#/components/schemas/Id'
+        pollId:
+          $ref: '#/components/schemas/Id'
+        caption:
+          type: string
+        presentationOrder:
+          type: integer
+
+    Poll:
+      type: object
+      required: [id, question, publishedAt, validUntil, optionIds]
+      properties:
+        id:
+          $ref: '#/components/schemas/Id'
+        question:
+          type: string
+        publishedAt:
+          type: string
+          format: date-time
+        validUntil:
+          type: string
+          format: date-time
+        optionIds:
+          type: array
+          items:
+            $ref: '#/components/schemas/Id'
+
+    PollCreate:
+      type: object
+      required: [question, publishedAt, validUntil, options]
+      properties:
+        question:
+          type: string
+        publishedAt:
+          type: string
+          format: date-time
+        validUntil:
+          type: string
+          format: date-time
+        options:
+          type: array
+          minItems: 2
+          items:
+            type: object
+            required: [caption, presentationOrder]
+            properties:
+              caption:
+                type: string
+              presentationOrder:
+                type: integer
+
+    Vote:
+      type: object
+      required: [id, publishedAt, userId, pollId, optionId]
+      properties:
+        id:
+          $ref: '#/components/schemas/Id'
+        publishedAt:
+          type: string
+          format: date-time
+        userId:
+          $ref: '#/components/schemas/Id'
+        pollId:
+          $ref: '#/components/schemas/Id'
+        optionId:
+          $ref: '#/components/schemas/Id'
+
+    VoteCreate:
+      type: object
+      required: [userId, optionId]
+      properties:
+        userId:
+          $ref: '#/components/schemas/Id'
+        optionId:
+          $ref: '#/components/schemas/Id'
