@@ -6,8 +6,8 @@ on:
 
 permissions:
   contents: read
-  checks: write          # for junit-report (Checks API)
-  pull-requests: write   # for PR-kommentar med dekning
+  checks: write
+  pull-requests: write
 
 jobs:
   build-test-coverage:
@@ -30,10 +30,6 @@ jobs:
       - name: Setup Gradle (cache)
         uses: gradle/actions/setup-gradle@v4
 
-      # Bygg + test + generer JaCoCo-rapporter (inkl. XML).
-      # Forutsetter at build.gradle(.kts) har:
-      # jacoco { toolVersion = "0.8.12" }
-      # tasks.jacocoTestReport { reports { xml.required = true; html.required = true } }
       - name: Build, Test & Coverage
         run: ./gradlew --no-daemon clean build jacocoTestReport --stacktrace
 
@@ -57,11 +53,24 @@ jobs:
           report_paths: '**/build/test-results/test/TEST-*.xml'
           require_tests: true
 
+      # 🔽🔽 LEGGES INN HER: konverter JaCoCo → Cobertura før CodeCoverageSummary 🔽🔽
+      - name: Setup .NET (for ReportGenerator)
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.x
+
+      - name: Convert JaCoCo XML -> Cobertura XML
+        uses: danielpalme/ReportGenerator-GitHub-Action@5.4.12
+        with:
+          reports: '**/build/reports/jacoco/test/jacocoTestReport.xml'  # input (JaCoCo)
+          targetdir: 'coverage-converted'                               # output folder
+          reporttypes: 'Cobertura'                                      # creates coverage-converted/Cobertura.xml
+      # 🔼🔼 SLUTT KONVERTERING 🔼🔼
+
       - name: Generate coverage summary (markdown + badge)
         uses: irongut/CodeCoverageSummary@v1.3.0
         with:
-          # Glob for mono- eller multimodul
-          filename: '**/build/reports/jacoco/test/jacocoTestReport.xml'
+          filename: 'coverage-converted/Cobertura.xml'  # <- Viktig: bruk Cobertura.xml
           badge: true
           fail_below_min: false
           format: markdown
@@ -78,7 +87,7 @@ jobs:
           if [ -f code-coverage-results.md ]; then
             cat code-coverage-results.md >> "$GITHUB_STEP_SUMMARY"
           else
-            echo "_No coverage summary file found. Check that **/build/reports/jacoco/test/jacocoTestReport.xml exists and has XML enabled in jacocoTestReport._" >> "$GITHUB_STEP_SUMMARY"
+            echo "_No coverage summary file found. Check conversion (Cobertura.xml) step._" >> "$GITHUB_STEP_SUMMARY"
           fi
 
       - name: Jacoco coverage summary comment (PR)
@@ -86,7 +95,7 @@ jobs:
         if: github.event_name == 'pull_request'
         with:
           paths: |
-            **/build/reports/jacoco/test/jacocoTestReport.xml
+            **/build/reports/jacoco/test/jacocoTestReport.xml  # madrapps leser JaCoCo direkte (behold)
           token: ${{ secrets.GITHUB_TOKEN }}
           title: 'JaCoCo Coverage'
           min-coverage-overall: 0
@@ -100,4 +109,5 @@ jobs:
           path: |
             **/build/reports/tests/test
             **/build/reports/jacoco/test/html
+            coverage-converted/Cobertura.xml
             code-coverage-results.md

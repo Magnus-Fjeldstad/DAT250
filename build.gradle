@@ -25,38 +25,19 @@ test {
 }
 
 jacocoTestReport {
-	dependsOn test
 	reports {
 		xml.required = true
 		html.required = true
 		csv.required = false
 	}
 
-	// Mål ALT i src/main til å begynne med
-	classDirectories.setFrom(files(sourceSets.main.output))
-	sourceDirectories.setFrom(files(sourceSets.main.allSource.srcDirs))
-
-	// Vær robust mht. hvor .exec ender opp
-	executionData.setFrom(
-			fileTree(layout.buildDirectory).include(
-					"jacoco/test.exec",
-					"jacoco/test/*.exec",
-					"jacoco/*.exec",
-					"**/*.exec"
+	classDirectories.setFrom(
+			fileTree(
+					dir: layout.buildDirectory.dir("classes/java/main").get().asFile,
+					include: ["**/*.class"]
 			)
 	)
-
-	// Nyttig logging i Gradle for å oppdage “ingen data”
-	doFirst {
-		def ed = executionData.filter { it.exists() && it.length() > 0 }.files
-		if (ed.isEmpty()) {
-			logger.warn("No JaCoCo execution data found. Did any tests run?")
-		} else {
-			logger.lifecycle("Using JaCoCo execution data files: ${ed}")
-		}
-	}
 }
-
 
 jacocoTestCoverageVerification {
 	violationRules {
