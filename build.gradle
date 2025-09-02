@@ -46,7 +46,8 @@ jacocoTestCoverageVerification {
 					fileTree(
 							dir: layout.buildDirectory.dir("classes/java/main").get().asFile,
 							include: ["**/*.class"],
-							exclude: ["**/*Application.class", "**/config/**"]
+							exclude: ["**/*Application.class", "**/config/**", "com/example/demo/generated/api/**", "com/example/demo/generated/model/**'"],
+
 					)
 			)
 			limit {
