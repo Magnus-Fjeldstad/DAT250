@@ -24,32 +24,28 @@ test {
 	finalizedBy jacocoTestReport
 }
 
+def mainOutput = files(sourceSets.main.output).asFileTree
+
+def coverageFilter = {
+	include '**/*.class'
+	exclude 'com/example/demo/generated/**'
+	exclude '**/*Application*'
+	exclude '**/config/**'
+}
+
 jacocoTestReport {
 	reports {
 		xml.required = true
 		html.required = true
 		csv.required = false
 	}
-
-	classDirectories.setFrom(
-			fileTree(
-					dir: layout.buildDirectory.dir("classes/java/main").get().asFile,
-					include: ["**/*.class"]
-			)
-	)
+	classDirectories.setFrom(mainOutput.matching(coverageFilter))
 }
 
 jacocoTestCoverageVerification {
 	violationRules {
 		rule {
-			classDirectories.setFrom(
-					fileTree(
-							dir: layout.buildDirectory.dir("classes/java/main").get().asFile,
-							include: ["**/*.class"],
-							exclude: ["**/*Application.class", "**/config/**", "com/example/demo/generated/api/**", "com/example/demo/generated/model/**'"],
-
-					)
-			)
+			classDirectories.setFrom(mainOutput.matching(coverageFilter))
 			limit {
 				counter = 'LINE'
 				value = 'COVEREDRATIO'
