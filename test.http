@@ -1,0 +1,82 @@
+### Create a new user
+POST http://localhost:8080/users
+Content-Type: application/json
+
+{
+  "username": "alice",
+  "email": "alice@example.com"
+}
+
+> {% client.global.set("user1_id", response.body.id); %}
+
+### List all users (should show the newly created user)
+GET http://localhost:8080/users
+Accept: application/json
+
+### Create another user
+POST http://localhost:8080/users
+Content-Type: application/json
+
+{
+  "username": "bob",
+  "email": "bob@example.com"
+}
+
+> {% client.global.set("user2_id", response.body.id); %}
+
+### List all users again (should show two users)
+GET http://localhost:8080/users
+Accept: application/json
+
+### User 1 creates a new poll
+POST http://localhost:8080/polls
+Content-Type: application/json
+
+{
+  "question": "Favorite color?",
+  "publishedAt": "{{now}}",
+  "validUntil": "{{now}}",
+  "options": [
+    { "caption": "Red", "presentationOrder": 1 },
+    { "caption": "Blue", "presentationOrder": 2 }
+  ]
+}
+
+> {% client.global.set("poll_id", response.body.id); %}
+> {% client.global.set("option1_id", response.body.optionIds[0]); %}
+> {% client.global.set("option2_id", response.body.optionIds[1]); %}
+
+### List polls (should show the new poll)
+GET http://localhost:8080/polls
+Accept: application/json
+
+### User 2 votes on the poll
+POST http://localhost:8080/votes
+Content-Type: application/json
+
+{
+  "userId": {{user2_id}},
+  "pollId": {{poll_id}},
+  "optionId": {{option1_id}}
+}
+
+### User 2 changes his vote
+POST http://localhost:8080/votes
+Content-Type: application/json
+
+{
+  "userId": {{user2_id}},
+  "pollId": {{poll_id}},
+  "optionId": {{option2_id}}
+}
+
+### List votes (should show the most recent vote for User 2)
+GET http://localhost:8080/votes
+Accept: application/json
+
+### Delete the one poll
+DELETE http://localhost:8080/polls/{{poll_id}}
+
+### List votes (should be empty)
+GET http://localhost:8080/votes
+Accept: application/json
