@@ -60,17 +60,25 @@ check.dependsOn jacocoTestCoverageVerification
 repositories { mavenCentral() }
 
 dependencies {
+	//Spring
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.6.0'
 
 	implementation 'org.openapitools:jackson-databind-nullable:0.2.6'
 
+	//Lombok
 	compileOnly 'org.projectlombok:lombok:1.18.32'
 	annotationProcessor 'org.projectlombok:lombok:1.18.32'
 	testCompileOnly 'org.projectlombok:lombok:1.18.32'
 	testAnnotationProcessor 'org.projectlombok:lombok:1.18.32'
 
+	//SPRING BOOT TESTING
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+
+	// REST-assured for API-testing
+	testImplementation 'io.rest-assured:rest-assured:5.4.0'
+	testImplementation 'io.rest-assured:json-path:5.4.0'
+	testImplementation 'io.rest-assured:json-schema-validator:5.4.0'
 }
 
 openApiGenerate {
